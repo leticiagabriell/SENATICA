@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo Rápido - π Senática</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .game-container {
+            padding: 40px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .game-info {
+            background: var(--background-white);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .problem-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin: 30px 0;
+            min-height: 80px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .answer-input {
+            width: 150px;
+            padding: 15px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 3px solid var(--primary-blue);
+            border-radius: 10px;
+        }
+
+        .timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--accent-orange);
+            margin: 15px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: var(--background-white);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--accent-orange);
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container header-content">
+            <h1 class="logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-pi">π Sen</span>ática
+                </a>
+            </h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../paginas/dia-a-dia.html">No dia a dia</a></li>
+                    <li><a href="jogos.html">Jogos</a></li>
+                    <li><a href="../paginas/matematica-ti.html">Matemática na TI</a></li>
+                    <li><a href="../paginas/videos.html">Vídeos</a></li>
+                    <li><a href="../paginas/sobre.html">Sobre</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-hero">
+            <div class="container">
+                <h1>Cálculo Rápido</h1>
+                <p>Teste sua velocidade em resolver problemas matemáticos!</p>
+            </div>
+        </section>
+
+        <section class="game-container">
+            <div class="game-info">
+                <h2>Resolva o problema o mais rápido possível!</h2>
+                
+                <div class="problem-display" id="problemDisplay">
+                    <!-- Problema será gerado aqui -->
+                </div>
+
+                <div class="timer" id="timer">Tempo: 60s</div>
+
+                <div class="input-group">
+                    <input type="number" id="answerInput" class="answer-input" placeholder="Resposta">
+                    <button onclick="checkAnswer()" class="btn-game">Enviar</button>
+                </div>
+
+                <div class="feedback" id="feedback">
+                    Digite sua resposta e clique em Enviar
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="scoreDisplay">0</div>
+                        <div>Pontuação</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="correctCount">0</div>
+                        <div>Corretas</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="incorrectCount">0</div>
+                        <div>Incorretas</div>
+                    </div>
+                </div>
+
+                <div class="game-controls">
+                    <button onclick="startGame()" class="btn-game" id="startButton">Iniciar Jogo</button>
+                    <button onclick="resetGame()" class="btn-game" style="background: #6c757d;">Reiniciar</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-text">
+            <p>Feito por alunos do Senac - Feira de Ciências 2025</p>
+        </div>
+    </footer>
+
+    <script>
+        let score = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let currentProblem = {};
+        let gameActive = false;
+
+        const operations = ['+', '-', '*'];
+
+        function generateProblem() {
+            const num1 = Math.floor(Math.random() * 20) + 1;
+            const num2 = Math.floor(Math.random() * 20) + 1;
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+            
+            let answer;
+            switch(operation) {
+                case '+':
+                    answer = num1 + num2;
+                    break;
+                case '-':
+                    answer = num1 - num2;
+                    break;
+                case '*':
+                    answer = num1 * num2;
+                    break;
+            }
+
+            currentProblem = {
+                num1: num1,
+                num2: num2,
+                operation: operation,
+                answer: answer
+            };
+
+            document.getElementById('problemDisplay').textContent = `${num1} ${operation} ${num2} = ?`;
+        }
+
+        function checkAnswer() {
+            if (!gameActive) return;
+
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+            const feedback = document.getElementById('feedback');
+
+            if (isNaN(userAnswer)) {
+                feedback.textContent = 'Por favor, digite um número válido';
+                feedback.className = 'feedback';
+                return;
+            }
+
+            if (userAnswer === currentProblem.answer) {
+                score += 10;
+                correctAnswers++;
+                feedback.textContent = '✅ Correto! +10 pontos';
+                feedback.className = 'feedback correct';
+            } else {
+                incorrectAnswers++;
+                feedback.textContent = `❌ Incorreto! A resposta era ${currentProblem.answer}`;
+                feedback.className = 'feedback incorrect';
+            }
+
+            updateStats();
+            document.getElementById('answerInput').value = '';
+            generateProblem();
+        }
+
+        function updateStats() {
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('incorrectCount').textContent = incorrectAnswers;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Tempo: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            timeLeft = 60;
+            
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('answerInput').focus();
+            
+            updateStats();
+            generateProblem();
+            startTimer();
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('feedback').textContent = `Fim de jogo! Sua pontuação final: ${score}`;
+            document.getElementById('problemDisplay').textContent = 'Jogo encerrado';
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            gameActive = false;
+            score = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            timeLeft = 60;
+            
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('timer').textContent = 'Tempo: 60s';
+            document.getElementById('feedback').textContent = 'Digite sua resposta e clique em Enviar';
+            document.getElementById('problemDisplay').textContent = 'Clique em Iniciar Jogo';
+            document.getElementById('answerInput').value = '';
+            
+            updateStats();
+        }
+
+        // Permitir enviar com Enter
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // Inicializar o jogo
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('problemDisplay').textContent = 'Clique em Iniciar Jogo';
+        });
+    </script>
+</body>
+</html>

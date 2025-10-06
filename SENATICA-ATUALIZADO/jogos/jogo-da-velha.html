@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Velha - π Senática</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .game-container {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-status {
+            font-size: 1.5em;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .tic-tac-toe-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 0 auto 30px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: var(--background-white);
+            border: 3px solid var(--primary-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cell:hover {
+            background: #f0f8ff;
+            transform: scale(1.05);
+        }
+
+        .cell.x {
+            color: var(--accent-orange);
+        }
+
+        .cell.o {
+            color: var(--primary-blue);
+        }
+
+        .game-controls {
+            text-align: center;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        .score-item {
+            padding: 10px 20px;
+            background: var(--background-white);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container header-content">
+            <h1 class="logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-pi">π Sen</span>ática
+                </a>
+            </h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../paginas/dia-a-dia.html">No dia a dia</a></li>
+                    <li><a href="jogos.html">Jogos</a></li>
+                    <li><a href="../paginas/matematica-ti.html">Matemática na TI</a></li>
+                    <li><a href="../paginas/videos.html">Vídeos</a></li>
+                    <li><a href="../paginas/sobre.html">Sobre</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-hero">
+            <div class="container">
+                <h1>Jogo da Velha</h1>
+                <p>Desafie um amigo neste clássico jogo de estratégia!</p>
+            </div>
+        </section>
+
+        <section class="game-container">
+            <div class="game-info">
+                <div class="game-status" id="gameStatus">Vez do Jogador X</div>
+                
+                <div class="score-board">
+                    <div class="score-item">
+                        <strong>Jogador X:</strong> <span id="scoreX">0</span>
+                    </div>
+                    <div class="score-item">
+                        <strong>Jogador O:</strong> <span id="scoreO">0</span>
+                    </div>
+                    <div class="score-item">
+                        <strong>Empates:</strong> <span id="scoreDraw">0</span>
+                    </div>
+                </div>
+
+                <div class="tic-tac-toe-board" id="gameBoard">
+                    <!-- Células serão geradas por JavaScript -->
+                </div>
+
+                <div class="game-controls">
+                    <button onclick="resetGame()" class="btn-game">Reiniciar Jogo</button>
+                    <button onclick="resetScore()" class="btn-game" style="background: #6c757d;">Zerar Placar</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-text">
+            <p>Feito por alunos do Senac - Feira de Ciências 2025</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentPlayer = 'X';
+        let gameState = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let scores = { X: 0, O: 0, draw: 0 };
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // linhas
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // colunas
+            [0, 4, 8], [2, 4, 6] // diagonais
+        ];
+
+        function initializeGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', () => cellClicked(i));
+                gameBoard.appendChild(cell);
+            }
+            
+            updateScores();
+        }
+
+        function cellClicked(index) {
+            if (!gameActive || gameState[index] !== '') return;
+
+            gameState[index] = currentPlayer;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.textContent = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase());
+
+            if (checkWinner()) {
+                gameActive = false;
+                scores[currentPlayer]++;
+                document.getElementById('gameStatus').textContent = `Jogador ${currentPlayer} venceu! 🎉`;
+                updateScores();
+                return;
+            }
+
+            if (gameState.every(cell => cell !== '')) {
+                gameActive = false;
+                scores.draw++;
+                document.getElementById('gameStatus').textContent = 'Empate! 🤝';
+                updateScores();
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('gameStatus').textContent = `Vez do Jogador ${currentPlayer}`;
+        }
+
+        function checkWinner() {
+            return winningConditions.some(condition => {
+                return condition.every(index => {
+                    return gameState[index] === currentPlayer;
+                });
+            });
+        }
+
+        function resetGame() {
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            document.getElementById('gameStatus').textContent = 'Vez do Jogador X';
+            
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        function resetScore() {
+            scores = { X: 0, O: 0, draw: 0 };
+            updateScores();
+            resetGame();
+        }
+
+        function updateScores() {
+            document.getElementById('scoreX').textContent = scores.X;
+            document.getElementById('scoreO').textContent = scores.O;
+            document.getElementById('scoreDraw').textContent = scores.draw;
+        }
+
+        // Inicializar o jogo quando a página carregar
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
